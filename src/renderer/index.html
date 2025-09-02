@@ -588,12 +588,24 @@
                         <button class="create-btn" onclick="startClaudeWithContext()" style="margin-right: 10px;">
                             🤖 Start Claude with Current Task
                         </button>
-                        <button class="create-btn" onclick="clearTerminal()">
+                        <button class="create-btn" onclick="clearTerminal()" style="margin-right: 10px;">
                             🗑️ Clear
+                        </button>
+                        <button class="create-btn" onclick="testTerminal()">
+                            🔍 Debug Terminal
                         </button>
                     </div>
                 </div>
-                <div id="terminal-container" style="height: calc(100% - 100px); background: #1a1a1a; border-radius: 8px; padding: 10px;">
+                
+                <!-- Debug Panel -->
+                <div class="dashboard-card" style="margin-bottom: 15px;">
+                    <div class="card-title">🔍 Terminal Debug Info</div>
+                    <div id="terminal-debug" style="font-family: monospace; font-size: 12px; color: #a0aec0; white-space: pre-line;">
+                        Waiting for debug info...
+                    </div>
+                </div>
+                
+                <div id="terminal-container" style="height: calc(100% - 200px); background: #1a1a1a; border-radius: 8px; padding: 10px;">
                     <!-- Xterm.js terminal will be mounted here -->
                 </div>
                 <div class="terminal-status" id="terminal-status" style="margin-top: 10px; font-size: 12px; color: #a0aec0;">
@@ -602,6 +614,11 @@
             </div>
         </div>
     </div>
+
+    <!-- Terminal Dependencies -->
+    <link rel="stylesheet" href="../../node_modules/@xterm/xterm/css/xterm.css">
+    <script src="../../node_modules/@xterm/xterm/lib/xterm.js"></script>
+    <script src="../../node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
 
     <script>
         const API_BASE = 'http://localhost:8000';
@@ -830,63 +847,92 @@
         
         // Initialize terminal when switching to terminal view
         function initializeTerminal() {
-            if (terminalInitialized) return;
+            console.log('🔍 initializeTerminal() called');
+            updateTerminalStatus('Initializing terminal...', 'connected');
             
-            // Load xterm.js if not already loaded
-            if (typeof Terminal === 'undefined') {
-                loadTerminalLibraries().then(() => {
-                    setupTerminal();
-                });
-            } else {
+            if (terminalInitialized) {
+                console.log('✅ Terminal already initialized');
+                return;
+            }
+            
+            // Check if Terminal is available
+            console.log('🔍 Checking Terminal libraries...');
+            console.log('Terminal:', typeof Terminal);
+            console.log('FitAddon:', typeof FitAddon);
+            
+            if (typeof Terminal !== 'undefined' && typeof FitAddon !== 'undefined') {
+                console.log('✅ Terminal libraries found, setting up...');
                 setupTerminal();
+            } else {
+                console.error('❌ Terminal libraries not loaded');
+                console.error('Terminal type:', typeof Terminal);
+                console.error('FitAddon type:', typeof FitAddon);
+                updateTerminalStatus('Terminal libraries not found. Check console for details.', 'error');
             }
         }
         
-        function loadTerminalLibraries() {
-            return new Promise((resolve) => {
-                // Load xterm CSS
-                const link = document.createElement('link');
-                link.rel = 'stylesheet';
-                link.href = 'node_modules/@xterm/xterm/css/xterm.css';
-                document.head.appendChild(link);
-                
-                // Load xterm JS
-                const script1 = document.createElement('script');
-                script1.src = 'node_modules/@xterm/xterm/lib/xterm.js';
-                script1.onload = () => {
-                    const script2 = document.createElement('script');
-                    script2.src = 'node_modules/@xterm/addon-fit/lib/addon-fit.js';
-                    script2.onload = resolve;
-                    document.head.appendChild(script2);
-                };
-                document.head.appendChild(script1);
-            });
-        }
-        
         function setupTerminal() {
+            console.log('🔍 setupTerminal() called');
             const terminalContainer = document.getElementById('terminal-container');
-            if (!terminalContainer || terminal) return;
+            
+            console.log('terminalContainer:', terminalContainer);
+            console.log('existing terminal:', terminal);
+            
+            if (!terminalContainer) {
+                console.error('❌ Terminal container not found!');
+                updateTerminalStatus('Terminal container missing', 'error');
+                return;
+            }
+            
+            if (terminal) {
+                console.log('⚠️ Terminal already exists, skipping setup');
+                return;
+            }
             
             // Create terminal instance
-            terminal = new Terminal({
-                cursorBlink: true,
-                theme: {
-                    background: '#1a1a1a',
-                    foreground: '#ffffff',
-                    cursor: '#6366f1',
-                    selection: 'rgba(99, 102, 241, 0.3)'
-                },
-                fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
-                fontSize: 14
-            });
-            
-            // Create fit addon
-            const fitAddon = new FitAddon();
-            terminal.loadAddon(fitAddon);
-            
-            // Open terminal in container
-            terminal.open(terminalContainer);
-            fitAddon.fit();
+            console.log('🔍 Creating Terminal instance...');
+            try {
+                terminal = new Terminal({
+                    cursorBlink: true,
+                    theme: {
+                        background: '#1a1a1a',
+                        foreground: '#ffffff',
+                        cursor: '#6366f1',
+                        selection: 'rgba(99, 102, 241, 0.3)'
+                    },
+                    fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
+                    fontSize: 14
+                });
+                console.log('✅ Terminal instance created:', terminal);
+                
+                // Create fit addon
+                console.log('🔍 Creating FitAddon...');
+                const fitAddon = new FitAddon();
+                console.log('✅ FitAddon created:', fitAddon);
+                
+                terminal.loadAddon(fitAddon);
+                console.log('✅ FitAddon loaded');
+                
+                // Open terminal in container
+                console.log('🔍 Opening terminal in container...');
+                console.log('Container dimensions:', terminalContainer.offsetWidth, 'x', terminalContainer.offsetHeight);
+                
+                terminal.open(terminalContainer);
+                console.log('✅ Terminal opened in container');
+                
+                fitAddon.fit();
+                console.log('✅ Terminal fitted to container');
+                
+                // Write test message
+                terminal.writeln('🚀 Trinity Motion Terminal Ready!');
+                terminal.writeln('Type commands or click "Start Claude with Current Task"');
+                terminal.write('$ ');
+                
+            } catch (error) {
+                console.error('❌ Error setting up terminal:', error);
+                updateTerminalStatus(`Setup error: ${error.message}`, 'error');
+                return;
+            }
             
             // Handle terminal input
             terminal.onData((data) => {
@@ -982,6 +1028,60 @@
                 statusElement.textContent = message;
                 statusElement.className = `terminal-status ${type}`;
             }
+        }
+        
+        function updateDebugInfo(info) {
+            const debugElement = document.getElementById('terminal-debug');
+            if (debugElement) {
+                debugElement.textContent = info;
+            }
+        }
+        
+        function testTerminal() {
+            let debugInfo = `🔍 Terminal Debug Test - ${new Date().toLocaleString()}\n\n`;
+            
+            // Check if libraries are loaded
+            debugInfo += `✓ Terminal Library Check:\n`;
+            debugInfo += `  - Terminal class: ${typeof Terminal}\n`;
+            debugInfo += `  - FitAddon class: ${typeof FitAddon}\n`;
+            debugInfo += `  - electronAPI: ${typeof window.electronAPI}\n\n`;
+            
+            // Check DOM elements
+            debugInfo += `✓ DOM Element Check:\n`;
+            const terminalContainer = document.getElementById('terminal-container');
+            debugInfo += `  - terminal-container: ${terminalContainer ? 'found' : 'missing'}\n`;
+            debugInfo += `  - terminal instance: ${terminal ? 'exists' : 'null'}\n`;
+            debugInfo += `  - terminalInitialized: ${terminalInitialized}\n\n`;
+            
+            // Check Electron IPC
+            debugInfo += `✓ Electron IPC Check:\n`;
+            if (window.electronAPI) {
+                debugInfo += `  - electronAPI available: YES\n`;
+                debugInfo += `  - invoke method: ${typeof window.electronAPI.invoke}\n`;
+                debugInfo += `  - on method: ${typeof window.electronAPI.on}\n`;
+            } else {
+                debugInfo += `  - electronAPI available: NO\n`;
+                debugInfo += `  - require available: ${typeof require}\n`;
+                if (typeof require !== 'undefined') {
+                    try {
+                        const { ipcRenderer } = require('electron');
+                        debugInfo += `  - ipcRenderer: ${typeof ipcRenderer}\n`;
+                    } catch (e) {
+                        debugInfo += `  - ipcRenderer error: ${e.message}\n`;
+                    }
+                }
+            }
+            
+            // Test terminal initialization
+            debugInfo += `\n✓ Testing Terminal Init:\n`;
+            try {
+                initializeTerminal();
+                debugInfo += `  - initializeTerminal() called successfully\n`;
+            } catch (e) {
+                debugInfo += `  - initializeTerminal() error: ${e.message}\n`;
+            }
+            
+            updateDebugInfo(debugInfo);
         }
         
         // Update the switchView function to handle terminal initialization

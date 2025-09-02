@@ -14,8 +14,8 @@ function createWindow() {
       contextIsolation: false
     },
     backgroundColor: '#0f0f0f',
-    titleBarStyle: 'hiddenInset',
-    frame: false
+    titleBarStyle: 'default',
+    frame: true
   });
 
   mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
