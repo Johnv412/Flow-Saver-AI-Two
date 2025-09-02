@@ -605,7 +605,7 @@
                     </div>
                 </div>
                 
-                <div id="terminal-container" style="height: calc(100% - 200px); background: #1a1a1a; border-radius: 8px; padding: 10px;">
+                <div id="terminal-container" style="height: calc(100% - 200px); background: #1a1a1a; border-radius: 8px; padding: 10px; border: 2px solid #6366f1; min-height: 400px;">
                     <!-- Xterm.js terminal will be mounted here -->
                 </div>
                 <div class="terminal-status" id="terminal-status" style="margin-top: 10px; font-size: 12px; color: #a0aec0;">
@@ -1105,15 +1105,30 @@
             terminal: 'Claude Terminal'
         };
         
-        // Set up Electron API bridge if available
-        if (typeof require !== 'undefined') {
-            const { ipcRenderer } = require('electron');
-            
-            window.electronAPI = {
-                invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
-                on: (channel, callback) => ipcRenderer.on(channel, (event, ...args) => callback(...args)),
-                removeListener: (channel, callback) => ipcRenderer.removeListener(channel, callback)
-            };
+        // Set up Electron API bridge - prioritize this since nodeIntegration is enabled
+        try {
+            if (typeof require !== 'undefined') {
+                const { ipcRenderer } = require('electron');
+                console.log('✅ Setting up electronAPI from require');
+                
+                window.electronAPI = {
+                    invoke: (channel, ...args) => {
+                        console.log('📤 IPC invoke:', channel, args);
+                        return ipcRenderer.invoke(channel, ...args);
+                    },
+                    on: (channel, callback) => {
+                        console.log('👂 IPC listener added:', channel);
+                        return ipcRenderer.on(channel, (event, ...args) => callback(...args));
+                    },
+                    removeListener: (channel, callback) => ipcRenderer.removeListener(channel, callback)
+                };
+                
+                console.log('✅ electronAPI configured successfully');
+            } else {
+                console.error('❌ require not available');
+            }
+        } catch (error) {
+            console.error('❌ Error setting up electronAPI:', error);
         }
     </script>
 </body>
