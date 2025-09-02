@@ -414,7 +414,11 @@
             </div>
             <div class="nav-item" data-view="terminal">
                 <span class="nav-icon">⚡</span>
-                <span>Claude Terminal</span>
+                <span>Trinity Terminals</span>
+            </div>
+            <div class="nav-item" data-view="settings">
+                <span class="nav-icon">🔑</span>
+                <span>API Keys</span>
             </div>
         </div>
         
@@ -580,36 +584,106 @@
                 </div>
             </div>
             
-            <!-- Claude Terminal View -->
+            <!-- API Keys Settings View -->
+            <div class="view-container" id="settings-view" style="display: none;">
+                <h2>🔑 API Keys Configuration</h2>
+                <div class="dashboard-card" style="margin-top: 20px; max-width: 600px;">
+                    <div class="card-title">Required API Keys</div>
+                    <p style="color: #a0aec0; margin-bottom: 20px;">
+                        Your keys are stored locally and encrypted. We never send them to our servers.
+                    </p>
+                    <form id="api-keys-form" style="display: flex; flex-direction: column; gap: 15px;">
+                        <div class="form-group">
+                            <label style="color: #a0aec0; font-size: 12px;">OpenAI API Key (for GPT-4)</label>
+                            <input type="password" id="openai-key" placeholder="sk-..." style="width: 100%;">
+                            <small style="color: #6b7280;">Get it from <a href="https://platform.openai.com/api-keys" style="color: #6366f1;">platform.openai.com</a></small>
+                        </div>
+                        <div class="form-group">
+                            <label style="color: #a0aec0; font-size: 12px;">Anthropic API Key (for Claude)</label>
+                            <input type="password" id="anthropic-key" placeholder="sk-ant-..." style="width: 100%;">
+                            <small style="color: #6b7280;">Get it from <a href="https://console.anthropic.com" style="color: #6366f1;">console.anthropic.com</a></small>
+                        </div>
+                        <div class="form-group">
+                            <label style="color: #a0aec0; font-size: 12px;">Google API Key (for Gemini)</label>
+                            <input type="password" id="google-key" placeholder="AIza..." style="width: 100%;">
+                            <small style="color: #6b7280;">Get it from <a href="https://makersuite.google.com/app/apikey" style="color: #6366f1;">makersuite.google.com</a></small>
+                        </div>
+                        <div class="form-group">
+                            <label style="color: #a0aec0; font-size: 12px;">Perplexity API Key (Optional)</label>
+                            <input type="password" id="perplexity-key" placeholder="pplx-..." style="width: 100%;">
+                            <small style="color: #6b7280;">Get it from <a href="https://www.perplexity.ai/settings/api" style="color: #6366f1;">perplexity.ai</a></small>
+                        </div>
+                        <button type="submit" class="create-btn" style="margin-top: 10px;">Save API Keys</button>
+                    </form>
+                    <div id="api-keys-status" style="margin-top: 15px; padding: 10px; border-radius: 6px; display: none;"></div>
+                </div>
+            </div>
+            
+            <!-- Multi-Terminal View with Tabs -->
             <div class="view-container" id="terminal-view">
                 <div class="terminal-header">
-                    <h2>⚡ Claude Terminal</h2>
+                    <h2>⚡ Trinity Terminals</h2>
                     <div class="terminal-controls">
-                        <button class="create-btn" onclick="startClaudeWithContext()" style="margin-right: 10px;">
-                            🤖 Start Claude with Current Task
+                        <button class="create-btn" onclick="showAPIKeySetup()" style="margin-right: 10px;">
+                            🔑 API Keys
                         </button>
-                        <button class="create-btn" onclick="clearTerminal()" style="margin-right: 10px;">
+                        <button class="create-btn" onclick="clearCurrentTerminal()" style="margin-right: 10px;">
                             🗑️ Clear
                         </button>
                         <button class="create-btn" onclick="testTerminal()">
-                            🔍 Debug Terminal
+                            🔍 Debug
                         </button>
                     </div>
                 </div>
                 
-                <!-- Debug Panel -->
-                <div class="dashboard-card" style="margin-bottom: 15px;">
-                    <div class="card-title">🔍 Terminal Debug Info</div>
-                    <div id="terminal-debug" style="font-family: monospace; font-size: 12px; color: #a0aec0; white-space: pre-line;">
-                        Waiting for debug info...
+                <!-- Terminal Sub-Tabs -->
+                <div class="terminal-tabs" style="display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                    <button class="terminal-tab active" id="tab-builder" onclick="switchTerminal('builder')" style="padding: 10px 20px; background: #6366f1; border: none; border-radius: 6px; color: white; cursor: pointer;">
+                        🔨 Builder Terminal
+                    </button>
+                    <button class="terminal-tab" id="tab-advisor" onclick="switchTerminal('advisor')" style="padding: 10px 20px; background: rgba(255,255,255,0.1); border: none; border-radius: 6px; color: white; cursor: pointer;">
+                        💬 Advisor Terminal <span style="color: #fbbf24; font-size: 10px;">PRO</span>
+                    </button>
+                    <button class="terminal-tab" id="tab-council" onclick="switchTerminal('council')" style="padding: 10px 20px; background: rgba(255,255,255,0.1); border: none; border-radius: 6px; color: white; cursor: pointer;">
+                        🧠 AI Council <span style="color: #fbbf24; font-size: 10px;">TEAMS</span>
+                    </button>
+                </div>
+                
+                <!-- Terminal Container for Builder -->
+                <div id="terminal-builder" class="terminal-panel" style="display: block;">
+                    <div class="dashboard-card" style="margin-bottom: 15px;">
+                        <div class="card-title">🔨 Builder Terminal - Code Development</div>
+                        <div style="font-size: 12px; color: #a0aec0;">Full Claude Code access for building features</div>
+                    </div>
+                    <div id="terminal-container-builder" style="height: calc(100% - 250px); background: #1a1a1a; border-radius: 8px; padding: 10px; border: 2px solid #6366f1; min-height: 400px;">
+                        <!-- Builder terminal mounts here -->
                     </div>
                 </div>
                 
-                <div id="terminal-container" style="height: calc(100% - 200px); background: #1a1a1a; border-radius: 8px; padding: 10px; border: 2px solid #6366f1; min-height: 400px;">
-                    <!-- Xterm.js terminal will be mounted here -->
+                <!-- Terminal Container for Advisor (Pro) -->
+                <div id="terminal-advisor" class="terminal-panel" style="display: none;">
+                    <div class="dashboard-card" style="margin-bottom: 15px;">
+                        <div class="card-title">💬 Advisor Terminal - Chat & Research</div>
+                        <div style="font-size: 12px; color: #a0aec0;">Dedicated chat terminal for questions and research</div>
+                    </div>
+                    <div id="terminal-container-advisor" style="height: calc(100% - 250px); background: #1a1a1a; border-radius: 8px; padding: 10px; border: 2px solid #f59e0b; min-height: 400px;">
+                        <!-- Advisor terminal mounts here -->
+                    </div>
                 </div>
+                
+                <!-- Terminal Container for Council (Teams) -->
+                <div id="terminal-council" class="terminal-panel" style="display: none;">
+                    <div class="dashboard-card" style="margin-bottom: 15px;">
+                        <div class="card-title">🧠 AI Council - Multi-AI Collaboration</div>
+                        <div style="font-size: 12px; color: #a0aec0;">4 AIs working together for complex decisions</div>
+                    </div>
+                    <div id="terminal-container-council" style="height: calc(100% - 250px); background: #1a1a1a; border-radius: 8px; padding: 10px; border: 2px solid #ef4444; min-height: 400px;">
+                        <!-- Council terminal mounts here -->
+                    </div>
+                </div>
+                
                 <div class="terminal-status" id="terminal-status" style="margin-top: 10px; font-size: 12px; color: #a0aec0;">
-                    Click "Start Claude with Current Task" to begin AI-powered terminal session
+                    Free tier: 1 terminal | Pro: 2 terminals | Teams: All terminals + AI Council
                 </div>
             </div>
         </div>
@@ -646,7 +720,9 @@
                 tasks: 'Task Management',
                 chat: 'AI Chat Assistant',
                 projects: 'Projects',
-                analytics: 'Analytics & Reports'
+                analytics: 'Analytics & Reports',
+                terminal: 'Trinity Terminals',
+                settings: 'API Keys Configuration'
             };
             document.getElementById('viewTitle').textContent = titles[viewName];
             currentView = viewName;
@@ -654,6 +730,13 @@
             // Load view-specific data
             if (viewName === 'tasks') {
                 loadTasks();
+            } else if (viewName === 'terminal') {
+                // Initialize builder terminal by default
+                if (!terminalInitialized.builder) {
+                    setTimeout(() => initializeTerminal('builder'), 100);
+                }
+            } else if (viewName === 'settings') {
+                loadAPIKeys();
             }
         }
         
@@ -841,131 +924,259 @@
         // Initial load
         updateDashboard();
         
-        // Terminal Integration
-        let terminal = null;
-        let terminalInitialized = false;
+        // Multi-Terminal Integration
+        let terminals = {
+            builder: null,
+            advisor: null,
+            council: null
+        };
+        let terminalInitialized = {
+            builder: false,
+            advisor: false,
+            council: false
+        };
+        let currentTerminal = 'builder';
+        let userPlan = 'free'; // TODO: Get from license check
         
-        // Initialize terminal when switching to terminal view
-        function initializeTerminal() {
-            console.log('🔍 initializeTerminal() called');
-            updateTerminalStatus('Initializing terminal...', 'connected');
+        // Initialize specific terminal
+        function initializeTerminal(terminalType = 'builder') {
+            console.log(`🔍 initializeTerminal(${terminalType}) called`);
             
-            if (terminalInitialized) {
-                console.log('✅ Terminal already initialized');
+            if (terminalInitialized[terminalType]) {
+                console.log(`✅ Terminal ${terminalType} already initialized`);
                 return;
             }
             
             // Check if Terminal is available
-            console.log('🔍 Checking Terminal libraries...');
-            console.log('Terminal:', typeof Terminal);
-            console.log('FitAddon:', typeof FitAddon);
-            
             if (typeof Terminal !== 'undefined' && typeof FitAddon !== 'undefined') {
-                console.log('✅ Terminal libraries found, setting up...');
-                setupTerminal();
+                console.log(`✅ Terminal libraries found, setting up ${terminalType}...`);
+                setupTerminal(terminalType);
             } else {
                 console.error('❌ Terminal libraries not loaded');
-                console.error('Terminal type:', typeof Terminal);
-                console.error('FitAddon type:', typeof FitAddon);
                 updateTerminalStatus('Terminal libraries not found. Check console for details.', 'error');
             }
         }
         
-        function setupTerminal() {
-            console.log('🔍 setupTerminal() called');
-            const terminalContainer = document.getElementById('terminal-container');
+        function setupTerminal(terminalType) {
+            console.log(`🔍 setupTerminal(${terminalType}) called`);
+            const terminalContainer = document.getElementById(`terminal-container-${terminalType}`);
             
-            console.log('terminalContainer:', terminalContainer);
-            console.log('existing terminal:', terminal);
+            console.log(`terminalContainer-${terminalType}:`, terminalContainer);
+            console.log(`existing terminal[${terminalType}]:`, terminals[terminalType]);
             
             if (!terminalContainer) {
-                console.error('❌ Terminal container not found!');
-                updateTerminalStatus('Terminal container missing', 'error');
+                console.error(`❌ Terminal container for ${terminalType} not found!`);
+                updateTerminalStatus(`Terminal container ${terminalType} missing`, 'error');
                 return;
             }
             
-            if (terminal) {
-                console.log('⚠️ Terminal already exists, skipping setup');
+            if (terminals[terminalType]) {
+                console.log(`⚠️ Terminal ${terminalType} already exists, skipping setup`);
                 return;
             }
             
             // Create terminal instance
-            console.log('🔍 Creating Terminal instance...');
+            console.log(`🔍 Creating Terminal instance for ${terminalType}...`);
             try {
-                terminal = new Terminal({
+                const terminalThemes = {
+                    builder: { cursor: '#6366f1', selection: 'rgba(99, 102, 241, 0.3)' },
+                    advisor: { cursor: '#f59e0b', selection: 'rgba(245, 158, 11, 0.3)' },
+                    council: { cursor: '#ef4444', selection: 'rgba(239, 68, 68, 0.3)' }
+                };
+                
+                terminals[terminalType] = new Terminal({
                     cursorBlink: true,
                     theme: {
                         background: '#1a1a1a',
                         foreground: '#ffffff',
-                        cursor: '#6366f1',
-                        selection: 'rgba(99, 102, 241, 0.3)'
+                        cursor: terminalThemes[terminalType].cursor,
+                        selection: terminalThemes[terminalType].selection
                     },
                     fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
                     fontSize: 14
                 });
-                console.log('✅ Terminal instance created:', terminal);
+                console.log(`✅ Terminal ${terminalType} instance created:`, terminals[terminalType]);
                 
                 // Create fit addon
-                console.log('🔍 Creating FitAddon...');
+                console.log(`🔍 Creating FitAddon for ${terminalType}...`);
                 const fitAddon = new FitAddon();
-                console.log('✅ FitAddon created:', fitAddon);
+                console.log(`✅ FitAddon created for ${terminalType}:`, fitAddon);
                 
-                terminal.loadAddon(fitAddon);
-                console.log('✅ FitAddon loaded');
+                terminals[terminalType].loadAddon(fitAddon);
+                console.log(`✅ FitAddon loaded for ${terminalType}`);
                 
                 // Open terminal in container
-                console.log('🔍 Opening terminal in container...');
+                console.log(`🔍 Opening terminal ${terminalType} in container...`);
                 console.log('Container dimensions:', terminalContainer.offsetWidth, 'x', terminalContainer.offsetHeight);
                 
-                terminal.open(terminalContainer);
-                console.log('✅ Terminal opened in container');
+                terminals[terminalType].open(terminalContainer);
+                console.log(`✅ Terminal ${terminalType} opened in container`);
                 
                 fitAddon.fit();
-                console.log('✅ Terminal fitted to container');
+                console.log(`✅ Terminal ${terminalType} fitted to container`);
                 
-                // Write test message
-                terminal.writeln('🚀 Trinity Motion Terminal Ready!');
-                terminal.writeln('Type commands or click "Start Claude with Current Task"');
-                terminal.write('$ ');
+                // Write different messages for each terminal
+                const welcomeMessages = {
+                    builder: ['🔨 Builder Terminal Ready!', 'Full Claude Code access for development'],
+                    advisor: ['💬 Advisor Terminal Ready!', 'Chat-focused assistance for questions'],
+                    council: ['🧠 AI Council Terminal Ready!', '4 AIs collaborating for complex decisions']
+                };
+                
+                terminals[terminalType].writeln(welcomeMessages[terminalType][0]);
+                terminals[terminalType].writeln(welcomeMessages[terminalType][1]);
+                terminals[terminalType].write('$ ');
                 
             } catch (error) {
-                console.error('❌ Error setting up terminal:', error);
-                updateTerminalStatus(`Setup error: ${error.message}`, 'error');
+                console.error(`❌ Error setting up terminal ${terminalType}:`, error);
+                updateTerminalStatus(`Setup error for ${terminalType}: ${error.message}`, 'error');
                 return;
             }
             
-            // Handle terminal input
-            terminal.onData((data) => {
+            // Handle terminal input for this specific terminal
+            terminals[terminalType].onData((data) => {
                 if (window.electronAPI) {
                     window.electronAPI.invoke('terminal-input', data);
                 }
             });
             
-            // Set up IPC listeners
+            // Set up IPC listeners for this terminal
             if (window.electronAPI) {
                 window.electronAPI.on('terminal-output', (data) => {
-                    terminal.write(data);
+                    if (terminals[terminalType]) {
+                        terminals[terminalType].write(data);
+                    }
                 });
                 
                 window.electronAPI.on('terminal-exit', () => {
-                    updateTerminalStatus('Terminal session ended', 'error');
+                    updateTerminalStatus(`Terminal ${terminalType} session ended`, 'error');
                 });
                 
                 window.electronAPI.on('terminal-error', (error) => {
-                    updateTerminalStatus(`Error: ${error}`, 'error');
+                    updateTerminalStatus(`Error in ${terminalType}: ${error}`, 'error');
                 });
             }
             
-            // Handle window resize
-            window.addEventListener('resize', () => {
-                if (terminal && currentView === 'terminal') {
-                    setTimeout(() => fitAddon.fit(), 100);
-                }
+            terminalInitialized[terminalType] = true;
+            updateTerminalStatus(`Terminal ${terminalType} ready`, 'connected');
+        }
+        
+        // New multi-terminal functions
+        function switchTerminal(terminalType) {
+            console.log(`🔄 Switching to terminal: ${terminalType}`);
+            
+            // Check freemium limits
+            if (terminalType === 'advisor' && userPlan === 'free') {
+                showUpgradePrompt('pro', 'Unlock Advisor Terminal with Pro!', 'Get dedicated chat terminal for $19/month');
+                return;
+            }
+            
+            if (terminalType === 'council' && (userPlan === 'free' || userPlan === 'pro')) {
+                showUpgradePrompt('teams', 'Unlock AI Council with Teams!', 'Get 4-AI collaboration for $49/month');
+                return;
+            }
+            
+            // Hide all terminal panels
+            document.querySelectorAll('.terminal-panel').forEach(panel => {
+                panel.style.display = 'none';
             });
             
-            terminalInitialized = true;
-            updateTerminalStatus('Terminal ready', 'connected');
+            // Remove active class from all tabs
+            document.querySelectorAll('.terminal-tab').forEach(tab => {
+                tab.style.background = 'rgba(255,255,255,0.1)';
+                tab.classList.remove('active');
+            });
+            
+            // Show selected terminal panel
+            document.getElementById(`terminal-${terminalType}`).style.display = 'block';
+            
+            // Activate selected tab
+            const activeTab = document.getElementById(`tab-${terminalType}`);
+            const colors = { builder: '#6366f1', advisor: '#f59e0b', council: '#ef4444' };
+            activeTab.style.background = colors[terminalType];
+            activeTab.classList.add('active');
+            
+            currentTerminal = terminalType;
+            
+            // Initialize terminal if not already done
+            if (!terminalInitialized[terminalType]) {
+                initializeTerminal(terminalType);
+            }
         }
+        
+        function showUpgradePrompt(plan, title, description) {
+            alert(`${title}\n\n${description}\n\nComing soon: Full license system!`);
+        }
+        
+        function showAPIKeySetup() {
+            switchView('settings');
+        }
+        
+        function clearCurrentTerminal() {
+            if (terminals[currentTerminal]) {
+                terminals[currentTerminal].clear();
+            }
+        }
+        
+        // API Keys functionality
+        function loadAPIKeys() {
+            console.log('📝 Loading API keys...');
+            if (window.electronAPI) {
+                const keys = window.electronAPI.invoke('get-keys');
+                if (keys) {
+                    document.getElementById('openai-key').value = keys.openai || '';
+                    document.getElementById('anthropic-key').value = keys.anthropic || '';
+                    document.getElementById('google-key').value = keys.google || '';
+                    document.getElementById('perplexity-key').value = keys.perplexity || '';
+                }
+            }
+        }
+        
+        function saveAPIKeys(event) {
+            event.preventDefault();
+            console.log('💾 Saving API keys...');
+            
+            const keys = {
+                openai: document.getElementById('openai-key').value.trim(),
+                anthropic: document.getElementById('anthropic-key').value.trim(),
+                google: document.getElementById('google-key').value.trim(),
+                perplexity: document.getElementById('perplexity-key').value.trim()
+            };
+            
+            // Basic validation
+            if (!keys.anthropic) {
+                showAPIKeysStatus('Please enter at least an Anthropic API key for Claude Code', 'error');
+                return;
+            }
+            
+            if (window.electronAPI) {
+                window.electronAPI.invoke('save-keys', keys).then(() => {
+                    showAPIKeysStatus('API keys saved successfully! ✅', 'success');
+                    setTimeout(() => {
+                        switchView('terminal'); // Go back to terminals
+                    }, 1500);
+                }).catch(error => {
+                    console.error('Error saving keys:', error);
+                    showAPIKeysStatus('Error saving keys. Please try again.', 'error');
+                });
+            }
+        }
+        
+        function showAPIKeysStatus(message, type) {
+            const statusElement = document.getElementById('api-keys-status');
+            statusElement.style.display = 'block';
+            statusElement.textContent = message;
+            statusElement.style.background = type === 'success' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+            statusElement.style.color = type === 'success' ? '#10b981' : '#ef4444';
+            statusElement.style.border = `1px solid ${type === 'success' ? '#10b981' : '#ef4444'}`;
+        }
+        
+        // Set up API keys form handler
+        document.addEventListener('DOMContentLoaded', () => {
+            const apiKeysForm = document.getElementById('api-keys-form');
+            if (apiKeysForm) {
+                apiKeysForm.addEventListener('submit', saveAPIKeys);
+            }
+        });
         
         // Terminal control functions
         async function startClaudeWithContext() {
