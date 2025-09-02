@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trinity Motion - Complete Project Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0f0f23;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 240px;
+            background: rgba(0,0,0,0.8);
+            border-right: 1px solid rgba(255,255,255,0.1);
+            padding: 20px 0;
+        }
+        
+        .app-title {
+            padding: 0 20px 20px;
+            font-size: 20px;
+            font-weight: 600;
+            color: #6366f1;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .nav-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+        
+        .nav-item:hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+        
+        .nav-item.active {
+            background: rgba(99, 102, 241, 0.2);
+            color: #6366f1;
+            border-left: 3px solid #6366f1;
+        }
+        
+        .nav-icon {
+            font-size: 18px;
+        }
+        
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* Top Bar */
+        .top-bar {
+            background: rgba(0,0,0,0.6);
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .view-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #a0aec0;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Content Views */
+        .view-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .view-container.active {
+            display: block;
+        }
+        
+        /* Tasks View */
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .task-stats {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .stat-card {
+            background: rgba(255,255,255,0.08);
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #6366f1;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #a0aec0;
+            margin-top: 4px;
+        }
+        
+        .task-form {
+            background: rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 200px;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            font-size: 12px;
+            color: #a0aec0;
+            margin-bottom: 6px;
+        }
+        
+        input, textarea, select {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            padding: 10px;
+            color: white;
+            font-size: 14px;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .create-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .create-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .task-list {
+            background: rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .task-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .task-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .task-meta {
+            font-size: 12px;
+            color: #a0aec0;
+        }
+        
+        .task-priority {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .priority-high { background: #ef4444; }
+        .priority-medium { background: #f59e0b; }
+        .priority-low { background: #10b981; }
+        
+        /* Chat View */
+        .chat-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            max-width: 70%;
+        }
+        
+        .message.user {
+            background: rgba(99, 102, 241, 0.2);
+            margin-left: auto;
+        }
+        
+        .message.ai {
+            background: rgba(255,255,255,0.08);
+        }
+        
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 12px;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .send-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        /* Dashboard View */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .dashboard-card {
+            background: rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #6366f1;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .metric:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-label {
+            color: #a0aec0;
+            font-size: 14px;
+        }
+        
+        .metric-value {
+            font-weight: 600;
+            color: #ffffff;
+        }
+        
+        /* Terminal Styles */
+        .terminal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .terminal-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .terminal-status {
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+            border-left: 3px solid #6366f1;
+        }
+        
+        .terminal-status.connected {
+            border-left-color: #10b981;
+        }
+        
+        .terminal-status.error {
+            border-left-color: #ef4444;
+        }
+        
+        /* Xterm.js overrides for dark theme */
+        #terminal-container .xterm {
+            background-color: #1a1a1a !important;
+        }
+        
+        #terminal-container .xterm-viewport {
+            background-color: #1a1a1a !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="app-title">🚀 Trinity Motion</div>
+            <div class="nav-item active" data-view="dashboard">
+                <span class="nav-icon">📊</span>
+                <span>Dashboard</span>
+            </div>
+            <div class="nav-item" data-view="tasks">
+                <span class="nav-icon">✅</span>
+                <span>Tasks</span>
+            </div>
+            <div class="nav-item" data-view="chat">
+                <span class="nav-icon">💬</span>
+                <span>AI Chat</span>
+            </div>
+            <div class="nav-item" data-view="projects">
+                <span class="nav-icon">📁</span>
+                <span>Projects</span>
+            </div>
+            <div class="nav-item" data-view="analytics">
+                <span class="nav-icon">📈</span>
+                <span>Analytics</span>
+            </div>
+            <div class="nav-item" data-view="terminal">
+                <span class="nav-icon">⚡</span>
+                <span>Claude Terminal</span>
+            </div>
+        </div>
+        
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="view-title" id="viewTitle">Dashboard</div>
+                <div class="connection-status">
+                    <div class="status-dot"></div>
+                    <span>Connected to Aether</span>
+                </div>
+            </div>
+            
+            <!-- Dashboard View -->
+            <div class="view-container active" id="dashboard-view">
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <div class="card-title">System Status</div>
+                        <div class="metric">
+                            <span class="metric-label">Engine Status</span>
+                            <span class="metric-value">OPERATIONAL</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Active Tasks</span>
+                            <span class="metric-value" id="activeTaskCount">0</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Projects</span>
+                            <span class="metric-value">5</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">AI Status</span>
+                            <span class="metric-value">READY</span>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <div class="card-title">Recent Activity</div>
+                        <div id="recentActivity">
+                            <div class="metric">
+                                <span class="metric-label">Loading activities...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <div class="card-title">Quick Actions</div>
+                        <button class="create-btn" style="width: 100%; margin-bottom: 10px;" onclick="switchView('tasks')">Create New Task</button>
+                        <button class="create-btn" style="width: 100%; margin-bottom: 10px;" onclick="switchView('chat')">Start AI Chat</button>
+                        <button class="create-btn" style="width: 100%;" onclick="generateReport()">Generate Report</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tasks View -->
+            <div class="view-container" id="tasks-view">
+                <div class="task-header">
+                    <h2>Task Management</h2>
+                    <div class="task-stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalTasks">0</div>
+                            <div class="stat-label">Total Tasks</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="completedTasks">0</div>
+                            <div class="stat-label">Completed</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="task-form">
+                    <h3 style="margin-bottom: 15px;">Create New Task</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Task Title</label>
+                            <input type="text" id="taskTitle" placeholder="e.g., HugeMouthSEO Project">
+                        </div>
+                        <div class="form-group">
+                            <label>Priority</label>
+                            <select id="taskPriority">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>Description</label>
+                        <textarea id="taskDescription" rows="3" placeholder="Task details..."></textarea>
+                    </div>
+                    <button class="create-btn" onclick="createTask()">Create Task</button>
+                </div>
+                
+                <div class="task-list">
+                    <h3 style="margin-bottom: 15px;">Active Tasks</h3>
+                    <div id="taskList">
+                        <div class="task-item">
+                            <div>
+                                <div class="task-title">Loading tasks...</div>
+                                <div class="task-meta">Please wait</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat View -->
+            <div class="view-container" id="chat-view">
+                <div class="chat-container">
+                    <div class="messages-container" id="messagesContainer">
+                        <div class="message ai">
+                            <strong>AI Assistant:</strong><br>
+                            Hello! I'm your AI project assistant. How can I help you today?
+                        </div>
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendMessage()">
+                        <button class="send-btn" onclick="sendMessage()">Send</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Projects View -->
+            <div class="view-container" id="projects-view">
+                <h2>Projects</h2>
+                <div class="dashboard-grid" style="margin-top: 20px;">
+                    <div class="dashboard-card">
+                        <div class="card-title">Pizza Lovers Directory</div>
+                        <div class="metric">
+                            <span class="metric-label">Status</span>
+                            <span class="metric-value">75% Complete</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Deadline</span>
+                            <span class="metric-value">Sept 15, 2025</span>
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-title">Trinity Aether Motion</div>
+                        <div class="metric">
+                            <span class="metric-label">Status</span>
+                            <span class="metric-value">90% Complete</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Deadline</span>
+                            <span class="metric-value">Sept 10, 2025</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Analytics View -->
+            <div class="view-container" id="analytics-view">
+                <h2>Analytics & Reports</h2>
+                <div class="dashboard-card" style="margin-top: 20px;">
+                    <div class="card-title">System Analytics</div>
+                    <p style="color: #a0aec0; line-height: 1.6;">
+                        Analytics dashboard showing project metrics, task completion rates, 
+                        and AI usage statistics. Full implementation coming soon.
+                    </p>
+                    <button class="create-btn" style="margin-top: 15px;" onclick="generateReport()">Generate Report</button>
+                </div>
+            </div>
+            
+            <!-- Claude Terminal View -->
+            <div class="view-container" id="terminal-view">
+                <div class="terminal-header">
+                    <h2>⚡ Claude Terminal</h2>
+                    <div class="terminal-controls">
+                        <button class="create-btn" onclick="startClaudeWithContext()" style="margin-right: 10px;">
+                            🤖 Start Claude with Current Task
+                        </button>
+                        <button class="create-btn" onclick="clearTerminal()">
+                            🗑️ Clear
+                        </button>
+                    </div>
+                </div>
+                <div id="terminal-container" style="height: calc(100% - 100px); background: #1a1a1a; border-radius: 8px; padding: 10px;">
+                    <!-- Xterm.js terminal will be mounted here -->
+                </div>
+                <div class="terminal-status" id="terminal-status" style="margin-top: 10px; font-size: 12px; color: #a0aec0;">
+                    Click "Start Claude with Current Task" to begin AI-powered terminal session
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let currentView = 'dashboard';
+        
+        // Navigation
+        function switchView(viewName) {
+            // Update nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.view === viewName) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Update views
+            document.querySelectorAll('.view-container').forEach(view => {
+                view.classList.remove('active');
+            });
+            document.getElementById(`${viewName}-view`).classList.add('active');
+            
+            // Update title
+            const titles = {
+                dashboard: 'Dashboard',
+                tasks: 'Task Management',
+                chat: 'AI Chat Assistant',
+                projects: 'Projects',
+                analytics: 'Analytics & Reports'
+            };
+            document.getElementById('viewTitle').textContent = titles[viewName];
+            currentView = viewName;
+            
+            // Load view-specific data
+            if (viewName === 'tasks') {
+                loadTasks();
+            }
+        }
+        
+        // Add click handlers to nav items
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                switchView(item.dataset.view);
+            });
+        });
+        
+        // Task Management
+        async function createTask() {
+            const title = document.getElementById('taskTitle').value.trim();
+            const description = document.getElementById('taskDescription').value.trim();
+            const priority = document.getElementById('taskPriority').value;
+            
+            if (!title) {
+                alert('Please enter a task title');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/tasks`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, description, priority, tags: [] })
+                });
+                
+                if (response.ok) {
+                    // Clear form
+                    document.getElementById('taskTitle').value = '';
+                    document.getElementById('taskDescription').value = '';
+                    
+                    // Reload tasks
+                    loadTasks();
+                    updateDashboard();
+                } else {
+                    alert('Failed to create task');
+                }
+            } catch (error) {
+                console.error('Error creating task:', error);
+            }
+        }
+        
+        async function loadTasks() {
+            try {
+                const response = await fetch(`${API_BASE}/api/tasks`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const tasks = data.tasks || [];
+                    const activeTasks = tasks.filter(t => t.status === 'active');
+                    const completedTasks = tasks.filter(t => t.status === 'completed');
+                    
+                    // Update stats
+                    document.getElementById('totalTasks').textContent = tasks.length;
+                    document.getElementById('completedTasks').textContent = completedTasks.length;
+                    document.getElementById('activeTaskCount').textContent = activeTasks.length;
+                    
+                    // Update task list
+                    const taskList = document.getElementById('taskList');
+                    if (activeTasks.length === 0) {
+                        taskList.innerHTML = '<div class="task-item"><div class="task-title">No active tasks</div></div>';
+                    } else {
+                        taskList.innerHTML = activeTasks.map(task => `
+                            <div class="task-item">
+                                <div>
+                                    <div class="task-title">${task.title}</div>
+                                    <div class="task-meta">
+                                        <span class="task-priority priority-${task.priority}">${task.priority}</span>
+                                        Created: ${new Date(task.created_at).toLocaleDateString()}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+            }
+        }
+        
+        // Chat functionality
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            const messagesContainer = document.getElementById('messagesContainer');
+            messagesContainer.innerHTML += `
+                <div class="message user">
+                    <strong>You:</strong><br>${message}
+                </div>
+            `;
+            
+            input.value = '';
+            
+            // Send to AI
+            try {
+                const response = await fetch(`${API_BASE}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        message, 
+                        session_id: `motion_${Date.now()}`
+                    })
+                });
+                
+                if (response.ok) {
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let aiResponse = '';
+                    
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        
+                        const chunk = decoder.decode(value);
+                        const lines = chunk.split('\n');
+                        
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                try {
+                                    const data = JSON.parse(line.slice(6));
+                                    if (data.chunk) {
+                                        aiResponse += data.chunk;
+                                    }
+                                } catch (e) {
+                                    // Skip invalid JSON
+                                }
+                            }
+                        }
+                    }
+                    
+                    messagesContainer.innerHTML += `
+                        <div class="message ai">
+                            <strong>AI Assistant:</strong><br>${aiResponse || 'I understand. How can I help you further?'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                messagesContainer.innerHTML += `
+                    <div class="message ai">
+                        <strong>AI Assistant:</strong><br>I'm having trouble connecting right now. Please try again.
+                    </div>
+                `;
+            }
+            
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        // Dashboard updates
+        async function updateDashboard() {
+            try {
+                const response = await fetch(`${API_BASE}/api/tasks`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const activeTasks = data.tasks.filter(t => t.status === 'active');
+                    document.getElementById('activeTaskCount').textContent = activeTasks.length;
+                    
+                    // Update recent activity
+                    const recentActivity = document.getElementById('recentActivity');
+                    const recentTasks = data.tasks.slice(-3).reverse();
+                    
+                    if (recentTasks.length > 0) {
+                        recentActivity.innerHTML = recentTasks.map(task => `
+                            <div class="metric">
+                                <span class="metric-label">${task.title}</span>
+                                <span class="metric-value">${task.status}</span>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating dashboard:', error);
+            }
+        }
+        
+        function generateReport() {
+            alert('Report generation triggered! Check the console for details.');
+            console.log('Generating analytics report...');
+        }
+        
+        // Initial load
+        updateDashboard();
+        
+        // Terminal Integration
+        let terminal = null;
+        let terminalInitialized = false;
+        
+        // Initialize terminal when switching to terminal view
+        function initializeTerminal() {
+            if (terminalInitialized) return;
+            
+            // Load xterm.js if not already loaded
+            if (typeof Terminal === 'undefined') {
+                loadTerminalLibraries().then(() => {
+                    setupTerminal();
+                });
+            } else {
+                setupTerminal();
+            }
+        }
+        
+        function loadTerminalLibraries() {
+            return new Promise((resolve) => {
+                // Load xterm CSS
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = 'node_modules/@xterm/xterm/css/xterm.css';
+                document.head.appendChild(link);
+                
+                // Load xterm JS
+                const script1 = document.createElement('script');
+                script1.src = 'node_modules/@xterm/xterm/lib/xterm.js';
+                script1.onload = () => {
+                    const script2 = document.createElement('script');
+                    script2.src = 'node_modules/@xterm/addon-fit/lib/addon-fit.js';
+                    script2.onload = resolve;
+                    document.head.appendChild(script2);
+                };
+                document.head.appendChild(script1);
+            });
+        }
+        
+        function setupTerminal() {
+            const terminalContainer = document.getElementById('terminal-container');
+            if (!terminalContainer || terminal) return;
+            
+            // Create terminal instance
+            terminal = new Terminal({
+                cursorBlink: true,
+                theme: {
+                    background: '#1a1a1a',
+                    foreground: '#ffffff',
+                    cursor: '#6366f1',
+                    selection: 'rgba(99, 102, 241, 0.3)'
+                },
+                fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
+                fontSize: 14
+            });
+            
+            // Create fit addon
+            const fitAddon = new FitAddon();
+            terminal.loadAddon(fitAddon);
+            
+            // Open terminal in container
+            terminal.open(terminalContainer);
+            fitAddon.fit();
+            
+            // Handle terminal input
+            terminal.onData((data) => {
+                if (window.electronAPI) {
+                    window.electronAPI.invoke('terminal-input', data);
+                }
+            });
+            
+            // Set up IPC listeners
+            if (window.electronAPI) {
+                window.electronAPI.on('terminal-output', (data) => {
+                    terminal.write(data);
+                });
+                
+                window.electronAPI.on('terminal-exit', () => {
+                    updateTerminalStatus('Terminal session ended', 'error');
+                });
+                
+                window.electronAPI.on('terminal-error', (error) => {
+                    updateTerminalStatus(`Error: ${error}`, 'error');
+                });
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                if (terminal && currentView === 'terminal') {
+                    setTimeout(() => fitAddon.fit(), 100);
+                }
+            });
+            
+            terminalInitialized = true;
+            updateTerminalStatus('Terminal ready', 'connected');
+        }
+        
+        // Terminal control functions
+        async function startClaudeWithContext() {
+            if (!terminalInitialized) {
+                initializeTerminal();
+                // Wait a bit for terminal to initialize
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            // Get current task context
+            const currentTask = getCurrentTaskContext();
+            const contextData = `FlowSaver Project - ${new Date().toLocaleString()}`;
+            
+            // Start terminal session
+            if (window.electronAPI) {
+                await window.electronAPI.invoke('terminal-start');
+                await window.electronAPI.invoke('terminal-start-claude', {
+                    currentTask,
+                    contextData
+                });
+            }
+            
+            updateTerminalStatus('Claude starting with current context...', 'connected');
+        }
+        
+        function clearTerminal() {
+            if (terminal) {
+                terminal.clear();
+            }
+        }
+        
+        function getCurrentTaskContext() {
+            // Get the currently selected or most recent task
+            // This would integrate with your task management system
+            try {
+                const taskElements = document.querySelectorAll('.task-item');
+                if (taskElements.length > 0) {
+                    const firstTask = taskElements[0];
+                    const titleElement = firstTask.querySelector('.task-title');
+                    const priorityElement = firstTask.querySelector('.task-priority');
+                    
+                    return {
+                        title: titleElement ? titleElement.textContent : 'Current FlowSaver Session',
+                        priority: priorityElement ? priorityElement.textContent : 'medium'
+                    };
+                }
+            } catch (error) {
+                console.error('Error getting task context:', error);
+            }
+            
+            return {
+                title: 'FlowSaver Project Management',
+                priority: 'high'
+            };
+        }
+        
+        function updateTerminalStatus(message, type = '') {
+            const statusElement = document.getElementById('terminal-status');
+            if (statusElement) {
+                statusElement.textContent = message;
+                statusElement.className = `terminal-status ${type}`;
+            }
+        }
+        
+        // Update the switchView function to handle terminal initialization
+        const originalSwitchView = switchView;
+        switchView = function(viewName) {
+            originalSwitchView(viewName);
+            
+            // Initialize terminal when switching to terminal view
+            if (viewName === 'terminal' && !terminalInitialized) {
+                setTimeout(initializeTerminal, 100);
+            }
+        };
+        
+        // Add terminal to the titles mapping
+        const titles = {
+            dashboard: 'Dashboard',
+            tasks: 'Task Management',
+            chat: 'AI Chat Assistant',
+            projects: 'Projects',
+            analytics: 'Analytics & Reports',
+            terminal: 'Claude Terminal'
+        };
+        
+        // Set up Electron API bridge if available
+        if (typeof require !== 'undefined') {
+            const { ipcRenderer } = require('electron');
+            
+            window.electronAPI = {
+                invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
+                on: (channel, callback) => ipcRenderer.on(channel, (event, ...args) => callback(...args)),
+                removeListener: (channel, callback) => ipcRenderer.removeListener(channel, callback)
+            };
+        }
+    </script>
+</body>
+</html>

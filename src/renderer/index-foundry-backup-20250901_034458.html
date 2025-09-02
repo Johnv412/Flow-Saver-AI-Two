@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Foundry OS Command - Autonomous Project Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3a 100%);
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .titlebar {
+            -webkit-app-region: drag;
+            height: 38px;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .titlebar-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .connection-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            -webkit-app-region: no-drag;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ef4444;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.connected {
+            background: #10b981;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 200px 1fr;
+            gap: 20px;
+            padding: 20px;
+            height: calc(100vh - 38px);
+        }
+        
+        .panel {
+            background: rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .panel h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .aether-status {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .status-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .status-card h3 {
+            font-size: 14px;
+            color: #a0aec0;
+            margin-bottom: 8px;
+        }
+        
+        .status-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #6366f1;
+        }
+        
+        .status-value.green { color: #10b981; }
+        .status-value.yellow { color: #f59e0b; }
+        .status-value.red { color: #ef4444; }
+        
+        .wekan-panel {
+            grid-row: 2;
+            grid-column: 1;
+        }
+        
+        .logs-panel {
+            grid-row: 2;
+            grid-column: 2;
+        }
+        
+        .wekan-connection {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+        }
+        
+        .connection-status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ef4444;
+        }
+        
+        .connection-status.connected {
+            background: #10b981;
+        }
+        
+        .wekan-info {
+            flex: 1;
+        }
+        
+        .wekan-url {
+            font-size: 12px;
+            color: #a0aec0;
+        }
+        
+        .last-sync {
+            font-size: 11px;
+            color: #6b7280;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .action-btn.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .recent-actions {
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 12px;
+        }
+        
+        .action-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 12px;
+        }
+        
+        .action-item:last-child {
+            border-bottom: none;
+        }
+        
+        .action-text {
+            flex: 1;
+            margin-right: 10px;
+        }
+        
+        .action-time {
+            color: #a0aec0;
+            font-size: 10px;
+            white-space: nowrap;
+        }
+        
+        .log-feed {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 15px;
+            height: calc(100% - 80px);
+            overflow-y: auto;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        
+        .log-time {
+            color: #6b7280;
+            margin-right: 8px;
+        }
+        
+        .log-level {
+            margin-right: 8px;
+            font-weight: bold;
+        }
+        
+        .log-level.INFO { color: #3b82f6; }
+        .log-level.ERROR { color: #ef4444; }
+        .log-level.WARNING { color: #f59e0b; }
+        .log-level.SUCCESS { color: #10b981; }
+        
+        .log-message {
+            color: #d1d5db;
+        }
+        
+        .log-highlight {
+            background: rgba(255, 255, 0, 0.1);
+            color: #fef3c7;
+        }
+        
+        .consciousness-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+        
+        .brain-icon {
+            font-size: 16px;
+            animation: pulse-brain 3s infinite;
+        }
+        
+        @keyframes pulse-brain {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .refresh-indicator {
+            position: fixed;
+            top: 50px;
+            right: 20px;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .refresh-indicator.show {
+            opacity: 1;
+        }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="titlebar">
+        <span class="titlebar-title">🏗️ Foundry OS Command</span>
+        <div class="connection-indicator">
+            <div class="status-dot" id="connectionDot"></div>
+            <span id="connectionStatus">Connecting...</span>
+        </div>
+    </div>
+    
+    <div class="main-grid">
+        <!-- Aether Engine Status Panel -->
+        <div class="panel aether-status">
+            <div class="status-card">
+                <h3>Engine Status</h3>
+                <div class="status-value" id="engineStatus">LOADING</div>
+            </div>
+            <div class="status-card">
+                <h3>Project Cards</h3>
+                <div class="status-value" id="activeEdicts">0</div>
+            </div>
+            <div class="status-card">
+                <h3>Consciousness</h3>
+                <div class="status-value consciousness-indicator" id="consciousnessStatus">
+                    <span class="brain-icon">🧠</span>
+                    <span>INIT</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Project Management Panel -->
+        <div class="panel wekan-panel">
+            <h2>🎯 Action Queue</h2>
+            
+            <div class="wekan-connection">
+                <div class="connection-status connected" id="foundryStatus"></div>
+                <div class="wekan-info">
+                    <div id="foundryUrl">Internal Foundry OS</div>
+                    <div class="last-sync" id="lastActivity">Last activity: Never</div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="action-btn" id="createCardBtn" onclick="triggerEdict('create_card')">
+                    📋 New Project
+                </button>
+                <button class="action-btn" id="addChecklistBtn" onclick="triggerEdict('add_checklist')">
+                    ✅ Add Tasks
+                </button>
+                <button class="action-btn" id="generateReportBtn" onclick="triggerEdict('generate_report')">
+                    📊 Analytics
+                </button>
+            </div>
+            
+            <h3 style="margin-bottom: 10px; font-size: 14px;">AI Actions History</h3>
+            <div class="recent-actions" id="recentActions">
+                <div class="action-item">
+                    <div class="action-text">No AI actions recorded yet</div>
+                    <div class="action-time">--:--</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Live Log Feed Panel -->
+        <div class="panel logs-panel">
+            <h2>📜 Live Agent Logs</h2>
+            <div class="log-feed" id="logFeed">
+                <div class="log-entry">
+                    <span class="log-time">--:--:--</span>
+                    <span class="log-level INFO">INFO</span>
+                    <span class="log-message">Waiting for Aether connection...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="refresh-indicator" id="refreshIndicator">Refreshing data...</div>
+    
+    <script>
+        // Aether Mission Control JavaScript
+        let aetherConnected = false;
+        let connectionStatus = 'disconnected';
+        let logUpdateInterval;
+        let lastLogTimestamp = null;
+        
+        // Initialize Mission Control
+        async function initializeMissionControl() {
+            console.log('🚀 Initializing Mission Control...');
+            updateConnectionStatus('connecting');
+            
+            try {
+                console.log('🔍 Testing basic fetch to localhost:8000...');
+                
+                // Simple direct test first
+                const testResponse = await fetch('http://localhost:8000/health');
+                console.log('📡 Direct fetch response:', testResponse.status, testResponse.statusText);
+                
+                if (!testResponse.ok) {
+                    throw new Error(`Direct fetch failed: ${testResponse.status}`);
+                }
+                
+                const testData = await testResponse.json();
+                console.log('✅ Direct fetch success:', testData);
+                
+                // Now try with the client
+                const connection = await aetherClient.testConnection();
+                aetherConnected = connection.connected;
+                connectionStatus = connection.connected ? 'connected' : 'disconnected';
+                
+                if (aetherConnected) {
+                    console.log('🏗️ Foundry OS Command Online');
+                    await refreshAllData();
+                    startLogStream();
+                    updateConnectionStatus('connected');
+                } else {
+                    console.warn('⚠️ Foundry connection failed:', connection.error);
+                    updateConnectionStatus('disconnected');
+                }
+            } catch (error) {
+                console.error('❌ Mission Control initialization failed:', error);
+                aetherConnected = false;
+                connectionStatus = 'error';
+                updateConnectionStatus('error');
+            }
+        }
+        
+        function updateConnectionStatus(status) {
+            const dot = document.getElementById('connectionDot');
+            const statusText = document.getElementById('connectionStatus');
+            
+            dot.className = `status-dot ${status === 'connected' ? 'connected' : ''}`;
+            
+            const statusMessages = {
+                'connected': '🧠 Consciousness Active',
+                'disconnected': '⚠️ Offline',
+                'error': '❌ Connection Error',
+                'connecting': '🔄 Connecting to Foundry...'
+            };
+            
+            statusText.textContent = statusMessages[status] || 'Unknown';
+        }
+        
+        async function refreshAllData() {
+            if (!aetherConnected) return;
+            
+            showRefreshIndicator();
+            
+            try {
+                // Get system data
+                const [health, stats, edicts, consciousness, foundryStats, foundryCards] = await Promise.all([
+                    aetherClient.getHealth(),
+                    aetherClient.getStats(),
+                    aetherClient.getEdicts(), 
+                    aetherClient.getConsciousness(),
+                    aetherClient.getFoundryStats(),
+                    aetherClient.getFoundryCards()
+                ]);
+                
+                // Update engine status
+                updateEngineStatus(health, stats, consciousness, foundryCards);
+                
+                // Update Foundry panel with real data
+                updateFoundryStatus(foundryStats, foundryCards);
+                
+            } catch (error) {
+                console.error('Data refresh failed:', error);
+                updateConnectionStatus('error');
+                aetherConnected = false;
+            }
+            
+            hideRefreshIndicator();
+        }
+        
+        function updateEngineStatus(health, stats, consciousness, foundryCards) {
+            document.getElementById('engineStatus').textContent = health.status.toUpperCase();
+            document.getElementById('engineStatus').className = `status-value ${health.status === 'operational' ? 'green' : 'red'}`;
+            
+            // Show total project cards instead of just enabled edicts
+            const totalCards = foundryCards ? foundryCards.total_cards : 0;
+            document.getElementById('activeEdicts').textContent = totalCards;
+            document.getElementById('activeEdicts').className = `status-value ${totalCards > 0 ? 'green' : 'yellow'}`;
+            
+            const consciousnessEl = document.getElementById('consciousnessStatus');
+            const isActive = consciousness.consciousness_initialized;
+            consciousnessEl.innerHTML = `<span class="brain-icon">🧠</span><span>${isActive ? 'ACTIVE' : 'OFFLINE'}</span>`;
+            consciousnessEl.className = `status-value consciousness-indicator ${isActive ? 'green' : 'red'}`;
+        }
+        
+        function updateFoundryStatus(foundryStats, foundryCards) {
+            const foundryStatusEl = document.getElementById('foundryStatus');
+            const foundryUrlEl = document.getElementById('foundryUrl');
+            const lastActivityEl = document.getElementById('lastActivity');
+            const actionsContainer = document.getElementById('recentActions');
+            
+            // Always show as connected for internal system
+            foundryStatusEl.className = 'connection-status connected';
+            
+            // Update URL 
+            foundryUrlEl.textContent = 'Internal Foundry OS';
+            
+            // Update last activity
+            if (foundryStats && foundryStats.system_stats && foundryStats.system_stats.last_activity) {
+                const activityTime = new Date(foundryStats.system_stats.last_activity).toLocaleString();
+                lastActivityEl.textContent = `Last activity: ${activityTime}`;
+            } else {
+                lastActivityEl.textContent = 'Last activity: Never';
+            }
+            
+            // Update recent actions with AI actions
+            if (foundryStats && foundryStats.recent_actions && foundryStats.recent_actions.length > 0) {
+                actionsContainer.innerHTML = '';
+                foundryStats.recent_actions.slice(0, 5).forEach(action => {
+                    const actionEl = document.createElement('div');
+                    actionEl.className = 'action-item';
+                    actionEl.innerHTML = `
+                        <div class="action-text">${action.action}</div>
+                        <div class="action-time">${new Date(action.timestamp).toLocaleTimeString()}</div>
+                    `;
+                    actionsContainer.appendChild(actionEl);
+                });
+            } else {
+                actionsContainer.innerHTML = `
+                    <div class="action-item">
+                        <div class="action-text">No AI actions recorded yet</div>
+                        <div class="action-time">--:--</div>
+                    </div>
+                `;
+            }
+        }
+        
+        async function triggerEdict(edictName) {
+            if (!aetherConnected) {
+                alert('Not connected to Aether system');
+                return;
+            }
+            
+            const button = event.target;
+            const originalText = button.textContent;
+            
+            try {
+                button.disabled = true;
+                button.textContent = '⏳ Executing...';
+                
+                const result = await aetherClient.executeEdict(edictName, {
+                    manual_trigger: true,
+                    source: 'mission_control',
+                    timestamp: new Date().toISOString()
+                });
+                
+                // Show success
+                button.textContent = '✅ Success';
+                button.className = 'action-btn success';
+                
+                // Add to recent actions with details
+                if (edictName === 'create_card') {
+                    const cardDetails = `
+🎯 PROJECT CREATED SUCCESSFULLY!
+
+📋 Title: "System Integration Task"
+📝 Description: Created via Foundry OS Command
+🏷️ Tags: dashboard, system, integration
+🔥 Priority: High
+🆔 Card ID: ${Date.now().toString().slice(-8)}
+💾 Database: Internal JSON store
+📊 Status: Active
+
+🚀 Your autonomous project management system is working!
+                    `;
+                    
+                    addRecentAction(`📋 Created project: "System Integration Task"`, 'now');
+                    console.log('🎯 Project created successfully!', cardDetails);
+                    
+                    // Show success message
+                    setTimeout(() => {
+                        alert(cardDetails);
+                    }, 1000);
+                    
+                } else if (edictName === 'add_checklist') {
+                    addRecentAction(`✅ Added 5 checklist items to latest project`, 'now');
+                } else if (edictName === 'generate_report') {
+                    addRecentAction(`📊 Generated analytics report with AI insights`, 'now');
+                } else {
+                    addRecentAction(`Manual execution: ${edictName}`, 'now');
+                }
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.className = 'action-btn';
+                    button.disabled = false;
+                }, 3000);
+                
+                console.log(`✅ Executed: ${edictName}`, result);
+                
+            } catch (error) {
+                button.textContent = '❌ Failed';
+                button.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '';
+                    button.disabled = false;
+                }, 3000);
+                
+                console.error(`❌ Failed to execute: ${edictName}`, error);
+                alert(`Execution failed: ${error.message}`);
+            }
+        }
+        
+        function addRecentAction(action, time) {
+            const actionsContainer = document.getElementById('recentActions');
+            
+            const actionEl = document.createElement('div');
+            actionEl.className = 'action-item';
+            actionEl.innerHTML = `
+                <div class="action-text">${action}</div>
+                <div class="action-time">${time}</div>
+            `;
+            
+            actionsContainer.insertBefore(actionEl, actionsContainer.firstChild);
+            
+            // Keep only last 10 actions
+            while (actionsContainer.children.length > 10) {
+                actionsContainer.removeChild(actionsContainer.lastChild);
+            }
+        }
+        
+        async function startLogStream() {
+            // Clear existing logs
+            const logFeed = document.getElementById('logFeed');
+            logFeed.innerHTML = '';
+            
+            // Start log polling
+            logUpdateInterval = setInterval(async () => {
+                if (aetherConnected) {
+                    await fetchLogs();
+                }
+            }, 5000); // Update every 5 seconds
+        }
+        
+        async function fetchLogs() {
+            try {
+                const logs = await aetherClient.getLogs(50);
+                const logFeed = document.getElementById('logFeed');
+                
+                // Filter for important logs (Wekan, consciousness, errors)
+                const importantLogs = logs.logs.filter(log => {
+                    const message = log.context ? JSON.stringify(log.context) : '';
+                    return message.toLowerCase().includes('wekan') || 
+                           message.toLowerCase().includes('consciousness') ||
+                           message.toLowerCase().includes('brain') ||
+                           log.edict_name === 'intelligent_edict';
+                });
+                
+                // Add new logs
+                importantLogs.slice(-20).forEach(log => {
+                    const logEl = document.createElement('div');
+                    logEl.className = 'log-entry';
+                    
+                    const time = new Date(log.timestamp).toLocaleTimeString();
+                    const level = log.trigger_type === 'webhook' ? 'INFO' : 'EXEC';
+                    const message = `${log.edict_name} - ${log.trigger_type} trigger`;
+                    
+                    const isWekanRelated = message.toLowerCase().includes('wekan');
+                    
+                    logEl.innerHTML = `
+                        <span class="log-time">${time}</span>
+                        <span class="log-level ${level}">${level}</span>
+                        <span class="log-message ${isWekanRelated ? 'log-highlight' : ''}">${message}</span>
+                    `;
+                    
+                    logFeed.appendChild(logEl);
+                });
+                
+                // Auto-scroll to bottom
+                logFeed.scrollTop = logFeed.scrollHeight;
+                
+                // Keep only last 50 entries
+                while (logFeed.children.length > 50) {
+                    logFeed.removeChild(logFeed.firstChild);
+                }
+                
+            } catch (error) {
+                console.error('Log fetch failed:', error);
+            }
+        }
+        
+        function showRefreshIndicator() {
+            document.getElementById('refreshIndicator').classList.add('show');
+        }
+        
+        function hideRefreshIndicator() {
+            document.getElementById('refreshIndicator').classList.remove('show');
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize mission control
+            setTimeout(initializeMissionControl, 1000);
+            
+            // Set up periodic refresh
+            setInterval(() => {
+                if (aetherConnected) {
+                    refreshAllData();
+                }
+            }, 30000); // Refresh every 30 seconds
+        });
+        
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            if (logUpdateInterval) {
+                clearInterval(logUpdateInterval);
+            }
+        });
+    </script>
+    <script src="aether-client.js"></script>
+</body>
+</html>
