@@ -546,26 +546,64 @@
             <div class="view-container" id="projects-view">
                 <h2>Projects</h2>
                 <div class="dashboard-grid" style="margin-top: 20px;">
-                    <div class="dashboard-card">
+                    <div class="dashboard-card" onclick="selectProject('pizza-directory')" style="cursor: pointer; transition: all 0.2s;">
                         <div class="card-title">Pizza Lovers Directory</div>
                         <div class="metric">
                             <span class="metric-label">Status</span>
-                            <span class="metric-value">75% Complete</span>
+                            <span class="metric-value" style="color: #f59e0b;">75% Complete</span>
                         </div>
                         <div class="metric">
                             <span class="metric-label">Deadline</span>
                             <span class="metric-value">Sept 15, 2025</span>
                         </div>
+                        <div class="metric">
+                            <span class="metric-label">Priority</span>
+                            <span class="metric-value">High</span>
+                        </div>
                     </div>
-                    <div class="dashboard-card">
+                    <div class="dashboard-card" onclick="selectProject('trinity-motion')" style="cursor: pointer; transition: all 0.2s;">
                         <div class="card-title">Trinity Aether Motion</div>
                         <div class="metric">
                             <span class="metric-label">Status</span>
-                            <span class="metric-value">90% Complete</span>
+                            <span class="metric-value" style="color: #10b981;">90% Complete</span>
                         </div>
                         <div class="metric">
                             <span class="metric-label">Deadline</span>
                             <span class="metric-value">Sept 10, 2025</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Priority</span>
+                            <span class="metric-value">Critical</span>
+                        </div>
+                    </div>
+                    <div class="dashboard-card" onclick="selectProject('ai-council')" style="cursor: pointer; transition: all 0.2s;">
+                        <div class="card-title">AI Council Integration</div>
+                        <div class="metric">
+                            <span class="metric-label">Status</span>
+                            <span class="metric-value" style="color: #6366f1;">Planning</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Deadline</span>
+                            <span class="metric-value">Sept 20, 2025</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Priority</span>
+                            <span class="metric-value">Medium</span>
+                        </div>
+                    </div>
+                    <div class="dashboard-card" onclick="selectProject('logos-builder')" style="cursor: pointer; transition: all 0.2s;">
+                        <div class="card-title">Logos App Builder</div>
+                        <div class="metric">
+                            <span class="metric-label">Status</span>
+                            <span class="metric-value" style="color: #6b7280;">Research</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Deadline</span>
+                            <span class="metric-value">Oct 1, 2025</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Priority</span>
+                            <span class="metric-value">Low</span>
                         </div>
                     </div>
                 </div>
@@ -919,6 +957,38 @@
         function generateReport() {
             alert('Report generation triggered! Check the console for details.');
             console.log('Generating analytics report...');
+        }
+        
+        function selectProject(projectId) {
+            const projects = {
+                'pizza-directory': {
+                    name: 'Pizza Lovers Directory',
+                    status: '75% Complete',
+                    deadline: 'Sept 15, 2025',
+                    description: 'Building comprehensive pizza directory with ratings and reviews'
+                },
+                'trinity-motion': {
+                    name: 'Trinity Aether Motion',
+                    status: '90% Complete', 
+                    deadline: 'Sept 10, 2025',
+                    description: 'AI-powered project management system with multi-terminal integration'
+                },
+                'ai-council': {
+                    name: 'AI Council Integration',
+                    status: 'Planning',
+                    deadline: 'Sept 20, 2025',
+                    description: '4-AI collaboration system for complex decision making'
+                },
+                'logos-builder': {
+                    name: 'Logos App Builder',
+                    status: 'Research',
+                    deadline: 'Oct 1, 2025',
+                    description: 'Visual drag-and-drop application builder interface'
+                }
+            };
+            
+            const project = projects[projectId];
+            alert(`📋 ${project.name}\n\n📊 Status: ${project.status}\n⏰ Deadline: ${project.deadline}\n\n📝 ${project.description}\n\n🚀 Click Tasks tab to manage project tasks!`);
         }
         
         // Initial load
@@ -1300,9 +1370,9 @@
         switchView = function(viewName) {
             originalSwitchView(viewName);
             
-            // Initialize terminal when switching to terminal view
-            if (viewName === 'terminal' && !terminalInitialized) {
-                setTimeout(initializeTerminal, 100);
+            // Initialize builder terminal when switching to terminal view
+            if (viewName === 'terminal' && !terminalInitialized.builder) {
+                setTimeout(() => initializeTerminal('builder'), 100);
             }
         };
         
@@ -1313,7 +1383,8 @@
             chat: 'AI Chat Assistant',
             projects: 'Projects',
             analytics: 'Analytics & Reports',
-            terminal: 'Claude Terminal'
+            terminal: 'Trinity Terminals',
+            settings: 'API Keys Configuration'
         };
         
         // Set up Electron API bridge - prioritize this since nodeIntegration is enabled
